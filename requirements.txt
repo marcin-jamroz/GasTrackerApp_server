@@ -1,6 +1,9 @@
-click==6.7
-Flask==0.12.2
-itsdangerous==0.24
-Jinja2==2.10
-MarkupSafe==1.0
-Werkzeug==0.14.1
+certifi==2018.4.16
+chardet==3.0.4
+idna==2.6
+pkg-resources==0.0.0
+pubnub==4.0.13
+pycryptodomex==3.6.1
+requests==2.18.4
+six==1.11.0
+urllib3==1.22
