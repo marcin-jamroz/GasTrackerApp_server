@@ -1,6 +1,6 @@
-CREATE TABLE IF NOT EXISTS gas_stations (  PRIMARY KEY (station_id),  network_name VARCHAR(256),  network_id INTEGER,  point GEOMETRY NOT NULL);
+CREATE TABLE IF NOT EXISTS gas_stations (  station_id INTEGER PRIMARY KEY,  network_name VARCHAR(256),  network_id INTEGER,  point GEOMETRY NOT NULL);
 
-INSERT INTO gas_stations(station_id, network_name, network_id,point) VALUES
+INSERT INTO gas_stations(station_id, network_name, network_id, point) VALUES
 	(237, 'PKN ORLEN', 166, ST_PointFromText('POINT(52.4443848800453 22.85232942062384)')),
 	(292, 'BP', 34, ST_PointFromText('POINT(50.03418881788611 19.93987441062927)')),
 	(559, 'Shell', 196, ST_PointFromText('POINT(52.089204 16.650992)')),

@@ -12,14 +12,13 @@ print(str.format('Converting file: {}', str(srcfile)))
 table_name = "gas_stations"
 
 create_table = str.format("CREATE TABLE IF NOT EXISTS {} (\
-  PRIMARY KEY (station_id),\
+  station_id INTEGER PRIMARY KEY,\
   network_name VARCHAR(256),\
   network_id INTEGER,\
   point GEOMETRY NOT NULL\
 );\n", table_name)
 
-insert_into = "INSERT INTO gas_stations(station_id, network_name, network_id,\
-point) VALUES\n"
+insert_into = "INSERT INTO gas_stations(station_id, network_name, network_id, point) VALUES\n"
 
 value = "\t({}, '{}', {}, ST_PointFromText('POINT({} {})'))"
 
