@@ -21,7 +21,7 @@ create_table = str.format("CREATE TABLE IF NOT EXISTS {} (\
 insert_into = "INSERT INTO gas_stations(station_id, network_name, network_id,\
 point) VALUES\n"
 
-value = "\t({}, '{}', {}, ST_PointFromText('POINT({} {})')"
+value = "\t({}, '{}', {}, ST_PointFromText('POINT({} {})'))"
 
 
 stations = json.load(open(srcfile))
