@@ -100,3 +100,6 @@ gasTrackerAppVenv/
 
 # mypy
 .mypy_cache/
+
+# IDE stuff
+.idea/
