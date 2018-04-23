@@ -16,7 +16,7 @@ create_table = str.format("CREATE TABLE IF NOT EXISTS {} (\
   network_name VARCHAR(256),\
   network_id INTEGER,\
   point GEOMETRY NOT NULL\
-)", table_name)
+);\n", table_name)
 
 insert_into = "INSERT INTO gas_stations(station_id, network_name, network_id,\
 point) VALUES\n"
