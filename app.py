@@ -8,8 +8,11 @@ DATABASE_URL = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 db = SQLAlchemy(app)
 
+
 @app.route('/')
 def home():
+    return 'KAAAAAPPPPPPAAA'
+
 
 if __name__ == '__main__':
     app.run(debug=True)
