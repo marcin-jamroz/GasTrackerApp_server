@@ -21,7 +21,7 @@ def home():
 @app.route('/station/<id>')
 def get_station(id):
     query = '''SELECT * FROM gas_stations WHERE station_id=:id'''
-    result = db.engine.execute(text(query), {"id" : 5}).fetchone()
+    result = db.engine.execute(text(query), {"id" : id}).fetchone()
     return jsonify(dict(result)), 200
 
 
