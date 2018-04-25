@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, jsonify
 import os
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import text
 
 app = Flask(__name__)
 
@@ -16,6 +17,13 @@ def home():
     print('----------->', type(result))
     print('----------->', result)
     return ' : '.join(result.popitem()), 200
+
+@app.route('/station/<id>')
+def get_station(id):
+    query = '''SELECT * FROM gas_stations WHERE station_id=:id'''
+    result = db.engine.execute(text(query), {"id" : 5}).fetchone()
+    return jsonify(dict(result)), 200
+
 
 
 if __name__ == '__main__':
