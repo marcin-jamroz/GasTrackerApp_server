@@ -15,7 +15,7 @@ def home():
     result = dict(result)
     print('----------->', type(result))
     print('----------->', result)
-    return ''.join(result.popitem(), ' : '), type(result)
+    return ' : '.join(result.popitem()), type(result)
 
 
 if __name__ == '__main__':
