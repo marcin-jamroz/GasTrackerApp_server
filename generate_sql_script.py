@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import sys
 import json
@@ -15,12 +16,13 @@ create_table = str.format("CREATE TABLE IF NOT EXISTS {} (\
   station_id INTEGER PRIMARY KEY,\
   network_name VARCHAR(256),\
   network_id INTEGER,\
+  price JSONB,\
   point GEOMETRY NOT NULL\
 );\n", table_name)
 
 insert_into = "INSERT INTO gas_stations(station_id, network_name, network_id, point) VALUES\n"
 
-value = "\t({}, '{}', {}, ST_PointFromText('POINT({} {})'))"
+value = "\t({}, '{}', {}, '{}', ST_PointFromText('POINT({} {})'))"
 
 
 stations = json.load(open(srcfile))
@@ -36,8 +38,10 @@ with open(outfile, 'w') as f:
           station["station_id"],\
           station["network_name"],\
           station["network_id"],\
+          '{ "price":1.22 }',\
           station["x"],\
           station["y"]))
+
       if (i == len(stations) - 1):
           f.write(";\n")
       else:
