@@ -11,7 +11,7 @@ db = SQLAlchemy(app)
 
 @app.route('/')
 def home():
-    result = db.engine.execute("SELECT network_name FROM gas_station WHERE station_id=237")
+    result = db.engine.execute("SELECT network_name FROM gas_stations WHERE station_id=237")
     print(type(result))
     print(result)
     return result, type(result), result.dict
