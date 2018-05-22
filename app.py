@@ -27,8 +27,12 @@ def get_station(id):
 @app.route('/networks', defaults={'id': None})
 @app.route('/networks/<id>')
 def get_network(id):
-    query = '''SELECT * FROM gas_networks WHERE network_id=:id'''
-    result = db.engine.execute(text(query), {"id" : id}).fetchone()
+    if (id):
+        query = '''SELECT * FROM gas_networks WHERE network_id=:id'''
+        result = db.engine.execute(text(query), {"id" : id}).fetchone()
+    else:
+        query = '''SELECT * FROM gas_networks'''
+        result = db.engine.execute(text(query)).fetchone()
     return jsonify(dict(result)), 200
 
 if __name__ == '__main__':
