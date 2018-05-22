@@ -21,7 +21,7 @@ def home():
 
 @app.route('/stations/<id>')
 def get_station(id):
-    query = '''SELECT * FROM gas_stations WHERE station_id=:id'''
+    query = '''SELECT *, ST_AsGeoJSON(point) as geojson FROM gas_stations WHERE station_id=:id'''
     result = db.engine.execute(text(query), {"id" : id}).fetchone()
     if (result):
         return jsonify(dict(result)), 200
