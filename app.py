@@ -24,16 +24,11 @@ def get_station(id):
     result = db.engine.execute(text(query), {"id" : id}).fetchone()
     return jsonify(dict(result)), 200
 
+@app.route('/networks', defaults={'id': None})
 @app.route('/networks/<id>')
 def get_network(id):
     query = '''SELECT * FROM gas_networks WHERE network_id=:id'''
     result = db.engine.execute(text(query), {"id" : id}).fetchone()
-    return jsonify(dict(result)), 200
-
-@app.route('/networks')
-def get_network():
-    query = '''SELECT * FROM gas_networks'''
-    result = db.engine.execute(text(query)).fetchone()
     return jsonify(dict(result)), 200
 
 if __name__ == '__main__':
