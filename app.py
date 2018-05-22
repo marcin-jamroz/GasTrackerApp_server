@@ -32,8 +32,8 @@ def get_network(id):
         result = db.engine.execute(text(query), {"id" : id}).fetchone()
     else:
         query = '''SELECT * FROM gas_networks'''
-        result = db.engine.execute(text(query)).fetchone()
-    return jsonify(dict(result)), 200
+        result = db.engine.execute(text(query))
+    return jsonify([dict(r) for r in result]), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
