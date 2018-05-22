@@ -23,7 +23,13 @@ def home():
 def get_station(id):
     query = '''SELECT * FROM gas_stations WHERE station_id=:id'''
     result = db.engine.execute(text(query), {"id" : id}).fetchone()
-    return jsonify(dict(result)), 200
+    if (result):
+        return jsonify(dict(result)), 200
+    else:
+        return jsonify({
+            "type": "NotFound",
+            "message": "Data not found for id {0}".format(id)
+        }), 404
 
 
 @app.route('/networks', defaults={'id': None})
@@ -33,16 +39,23 @@ def get_network(id):
         if (id):
             query = '''SELECT * FROM gas_networks WHERE network_id=:id'''
             result = db.engine.execute(text(query), {"id" : id}).fetchone()
-            return jsonify(dict(result)), 200
+            if (result):
+                return jsonify(dict(result)), 200
+            else:
+                return jsonify({
+                    "type": "NotFound",
+                    "message": "Data not found for id {0}".format(id)
+                }), 404
         else:
             query = '''SELECT * FROM gas_networks'''
             result = db.engine.execute(text(query))
             return jsonify([dict(r) for r in result]), 200
+
     except Exception as e:
-        result = dict()
-        result['type'] = type(e).__name__
-        result['message'] = e.message if hasattr(e, 'message') else str(e)
-        return jsonify(result)
+        return jsonify({
+            "type":type(e).__name__,
+            "message":e.message if hasattr(e, 'message') else str(e)
+        }), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
