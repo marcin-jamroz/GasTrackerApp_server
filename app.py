@@ -18,11 +18,13 @@ def home():
     print('----------->', result)
     return ' : '.join(result.popitem()), 200
 
+
 @app.route('/stations/<id>')
 def get_station(id):
     query = '''SELECT * FROM gas_stations WHERE station_id=:id'''
     result = db.engine.execute(text(query), {"id" : id}).fetchone()
     return jsonify(dict(result)), 200
+
 
 @app.route('/networks', defaults={'id': None})
 @app.route('/networks/<id>')
@@ -30,10 +32,11 @@ def get_network(id):
     if (id):
         query = '''SELECT * FROM gas_networks WHERE network_id=:id'''
         result = db.engine.execute(text(query), {"id" : id}).fetchone()
+        return jsonify(dict(result)), 200
     else:
         query = '''SELECT * FROM gas_networks'''
         result = db.engine.execute(text(query))
-    return jsonify([dict(r) for r in result]), 200
+        return jsonify([dict(r) for r in result]), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
