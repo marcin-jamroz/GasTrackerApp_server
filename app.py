@@ -6,6 +6,8 @@ from sqlalchemy.sql import text
 app = Flask(__name__)
 
 DATABASE_URL = os.environ['DATABASE_URL']
+print()
+print(DATABASE_URL)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 db = SQLAlchemy(app)
 
