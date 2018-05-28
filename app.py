@@ -3,8 +3,7 @@ import os, traceback
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
 
-from services.spatial_services import getStationsFromRadius
-
+from services.spatial_services import getStationsFromRadius, getClusterWithBounds
 
 app = Flask(__name__)
 
@@ -82,18 +81,29 @@ def get_network(id):
 @app.route('/clusters', defaults={'id': None})
 @app.route('/clusters/<id>')
 def clusters(id):
+    bounding = request.args.get('bounding')
     try:
         if (id):
-            query = '''SELECT *, ST_X(center) as lat, ST_Y(center) as lng FROM clusters WHERE cluster_id=:id'''
-            result = db.engine.execute(text(query), {"id" : id}).fetchone()
-            if (result):
-                return jsonify(dict(result)), 200
+            result = None
+            jsonified = None
+            if (bounding):
+                result = getClusterWithBounds(db, id, bounding)
+                jsonified = jsonify(result)
             else:
+                query = '''SELECT *, ST_X(center) as lat, ST_Y(center) as lng FROM clusters WHERE cluster_id=:id'''
+                result = db.engine.execute(text(query), {"id" : id}).fetchone()
+                jsonified = jsonify(dict(result))
+
+            if (not result):
                 return jsonify({
                     "type": "NotFound",
                     "message": "Data not found for id {0}".format(id)
                 }), 404
+            return jsonified, 200
         else:
+            if (bounding):
+                return jsonify(getClusterWithBounds(db, None, bounding))
+
             query = '''SELECT *, ST_X(center) as lat, ST_Y(center) as lng FROM clusters'''
             result = db.engine.execute(text(query))
             return jsonify([dict(r) for r in result]), 200
