@@ -1,7 +1,10 @@
-from flask import Flask, jsonify
-import os
+from flask import Flask, jsonify, request
+import os, traceback
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
+
+from services.spatial_services import getStationsFromRadius
+
 
 app = Flask(__name__)
 
@@ -14,24 +17,39 @@ db = SQLAlchemy(app)
 
 @app.route('/')
 def home():
-    result = db.engine.execute("SELECT network_name FROM gas_stations WHERE station_id=237").fetchone()
-    result = dict(result)
-    print('----------->', type(result))
-    print('----------->', result)
-    return ' : '.join(result.popitem()), 200
+    return jsonify({
+        "version": "0.0.1",
+        "authors": [ "Marcin Jamroz", "Filip Rak" ],
+        "name": "gas-tracker-app"
+    }), 200
 
-
+@app.route('/stations', defaults={'id': None})
 @app.route('/stations/<id>')
 def get_station(id):
-    query = '''SELECT *, ST_X(point) as lat, ST_Y(point) as lng  FROM gas_stations WHERE station_id=:id'''
-    result = db.engine.execute(text(query), {"id" : id}).fetchone()
-    if (result):
-        return jsonify(dict(result)), 200
-    else:
+    radius = request.args.get('radius')
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+
+    try:
+        if (radius and lat and lng):
+            return jsonify(getStationsFromRadius(db, { "lat":lat, "lng":lng }, radius))
+
+        query = '''SELECT *, ST_X(point) as lat, ST_Y(point) as lng  FROM gas_stations WHERE station_id=:id'''
+        result = db.engine.execute(text(query), {"id" : id}).fetchone()
+        if (result):
+            return jsonify(dict(result)), 200
+        else:
+            return jsonify({
+                "type": "NotFound",
+                "message": "Data not found for id {0}".format(id)
+            }), 404
+
+    except Exception as e:
+        traceback.print_exc()
         return jsonify({
-            "type": "NotFound",
-            "message": "Data not found for id {0}".format(id)
-        }), 404
+            "type":type(e).__name__,
+            "message":e.message if hasattr(e, 'message') else str(e)
+        }), 400
 
 
 @app.route('/networks', defaults={'id': None})
@@ -54,10 +72,40 @@ def get_network(id):
             return jsonify([dict(r) for r in result]), 200
 
     except Exception as e:
+        traceback.print_exc()
         return jsonify({
             "type":type(e).__name__,
             "message":e.message if hasattr(e, 'message') else str(e)
         }), 400
+
+
+@app.route('/clusters', defaults={'id': None})
+@app.route('/clusters/<id>')
+def clusters(id):
+    try:
+        if (id):
+            query = '''SELECT *, ST_X(center) as lat, ST_Y(center) as lng FROM clusters WHERE cluster_id=:id'''
+            result = db.engine.execute(text(query), {"id" : id}).fetchone()
+            if (result):
+                return jsonify(dict(result)), 200
+            else:
+                return jsonify({
+                    "type": "NotFound",
+                    "message": "Data not found for id {0}".format(id)
+                }), 404
+        else:
+            query = '''SELECT *, ST_X(center) as lat, ST_Y(center) as lng FROM clusters'''
+            result = db.engine.execute(text(query))
+            return jsonify([dict(r) for r in result]), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "type":type(e).__name__,
+            "message":e.message if hasattr(e, 'message') else str(e)
+        }), 400
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
