@@ -8,12 +8,12 @@ def getClusterStations(db, latitude, longitude, fuel):
     print(cluster)
 
     query_cheapest_station = text(
-        '''SELECT * FROM gas_stations gs WHERE gs.cluster_id = :cluster_id AND gs.price->>:fuel= (SELECT MIN(g.price->>:fuel) FROM gas_stations g WHERE cluster_id=:cluster_id);''')
+        '''SELECT *, ST_X(gs.point) as lat, ST_Y(gs.point) as lng FROM gas_stations gs WHERE gs.cluster_id = :cluster_id AND gs.price->>:fuel= (SELECT MIN(g.price->>:fuel) FROM gas_stations g WHERE cluster_id=:cluster_id);''')
     cheapest_stations = db.engine.execute(query_cheapest_station,
                                           {'cluster_id': cluster['cluster_id'], 'fuel': fuel}).fetchall()
 
     query_closest_station = text(
-        '''SELECT * FROM gas_stations g WHERE g.cluster_id = :cluster_id ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), :cluster_point) LIMIT 1;''')
+        '''SELECT *, ST_X(g.point) as lat, ST_Y(g.point) as lng FROM gas_stations g WHERE g.cluster_id = :cluster_id ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), :cluster_point) LIMIT 1;''')
     closest_station = db.engine.execute(query_closest_station,
                                         {'cluster_id': cluster['cluster_id'], 'lat': latitude, 'lng': longitude,
                                          'cluster_point': cluster['center']}).fetchone()
