@@ -3,7 +3,7 @@ import os, traceback
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
 
-from services.spatial_services import getStationsFromRadius, getClusterWithBounds
+from services.spatial_services import getStationsFromRadius, getClusterWithBounds, getClusterStations
 
 app = Flask(__name__)
 
@@ -21,6 +21,16 @@ def home():
         "authors": [ "Marcin Jamroz", "Filip Rak" ],
         "name": "gas-tracker-app"
     }), 200
+
+@app.route('/cluster_stations')
+def get_cluster_stations():
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+    fuel = request.args.get('fuel')
+
+    result = getClusterStations(db, lat, lng, fuel)
+    return jsonify(result)
+
 
 @app.route('/stations', defaults={'id': None})
 @app.route('/stations/<id>')
