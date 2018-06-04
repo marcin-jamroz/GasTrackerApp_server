@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-import os, traceback
+import os, traceback, time, datetime, json
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
 
@@ -31,6 +31,59 @@ def get_cluster_stations():
     result = getClusterStations(db, lat, lng, fuel)
     return jsonify(result)
 
+@app.route('/prices')
+def prices():
+    station_id = request.args.get('station_id')
+
+    pb95 = request.args.get('PB95')
+    on = request.args.get('ON')
+    lpg = request.args.get('LPG')
+
+    try:
+        prices_dict = {}
+        if (pb95):
+            prices_dict['PB95'] = round(float(pb95), 2)
+        if (on):
+            prices_dict['ON'] = round(float(on), 2)
+        if (lpg):
+            prices_dict['LPG'] = round(float(lpg), 2)
+
+        if (not station_id):
+            raise Exception('Correct station id is required in url param')
+
+        if (not (pb95 or lpg or on)):
+            raise Exception('At least one of: LPG | PB95 | ON price is required in url param')
+
+        query = '''UPDATE gas_stations
+                    SET price = price || jsonb :pricejson,
+                        updated = to_timestamp(:updatetime)
+                    WHERE station_id=:id'''
+
+        ts = time.time()
+
+        result = db.engine.execute(text(query), {
+            "id" : int(station_id),
+            "pricejson": json.dumps(prices_dict),
+            "updatetime": ts
+        })
+        if (result.rowcount == 1):
+            prices_dict["status"] = "OK"
+            prices_dict["station_id"] = int(station_id)
+            prices_dict["updated"] = ts
+            return jsonify(prices_dict), 200
+        else:
+            return jsonify({
+                "type": "NotFound",
+                "message": "Error updating price for station id {0}".format(station_id)
+            }), 404
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "type":type(e).__name__,
+            "message":e.message if hasattr(e, 'message') else str(e)
+        }), 400
+
 
 @app.route('/stations', defaults={'id': None})
 @app.route('/stations/<id>')
@@ -43,7 +96,8 @@ def get_station(id):
         if (radius and lat and lng):
             return jsonify(getStationsFromRadius(db, { "lat":lat, "lng":lng }, radius))
 
-        query = '''SELECT *, ST_X(point) as lat, ST_Y(point) as lng  FROM gas_stations WHERE station_id=:id'''
+        query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng
+                    FROM gas_stations WHERE station_id=:id'''
         result = db.engine.execute(text(query), {"id" : id}).fetchone()
         if (result):
             return jsonify(dict(result)), 200
