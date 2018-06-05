@@ -22,6 +22,7 @@ def getClusterStations(db, latitude, longitude, fuel):
     result = {'cheapest_stations': cheapest_stations, 'closest_station': dict(closest_station)}
     return result
 
+
 def getStationsFromRadius(db, point, radius):
     if (not (radius or point or db)):
         return []
@@ -77,3 +78,25 @@ def getClusterWithBounds(db, id, boundtype="Polygon"):
             return [dict(r) for r in result]
         else:
             return []
+
+
+def getRouteStations(db, route):
+    query_cluster = text('''SELECT c.cluster_id, c.center FROM clusters c ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 1;
+''')
+    cluster = db.engine.execute(query_cluster, {'lat': latitude, 'lng': longitude}).fetchone()
+    print(cluster)
+
+    query_cheapest_station = text(
+        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations gs WHERE gs.cluster_id = :cluster_id AND gs.price->>:fuel= (SELECT MIN(g.price->>:fuel) FROM gas_stations g WHERE cluster_id=:cluster_id);''')
+    cheapest_stations = db.engine.execute(query_cheapest_station,
+                                          {'cluster_id': cluster['cluster_id'], 'fuel': fuel}).fetchall()
+
+    query_closest_station = text(
+        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations g WHERE g.cluster_id = :cluster_id ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), :cluster_point) LIMIT 1;''')
+    closest_station = db.engine.execute(query_closest_station,
+                                        {'cluster_id': cluster['cluster_id'], 'lat': latitude, 'lng': longitude,
+                                         'cluster_point': cluster['center']}).fetchone()
+
+    cheapest_stations = [dict(x) for x in cheapest_stations]
+    result = {'cheapest_stations': cheapest_stations, 'closest_station': dict(closest_station)}
+    return result

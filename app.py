@@ -17,7 +17,7 @@ db = SQLAlchemy(app)
 @app.route('/')
 def home():
     return jsonify({
-        "version": "0.0.1",
+        "version": "1.0.0",
         "authors": [ "Marcin Jamroz", "Filip Rak" ],
         "name": "gas-tracker-app"
     }), 200
@@ -30,6 +30,23 @@ def get_cluster_stations():
 
     result = getClusterStations(db, lat, lng, fuel)
     return jsonify(result)
+
+@app.route('/route_stations', methods=["POST"])
+def get_route_stations():
+    try:
+        data = request.get_json(force=True)
+        if "route" not in data or not data["route"]:
+            raise Exception("A valid 'route' parameter is required in request body (array of [lat, lng])")
+
+        # todo implement
+
+        return jsonify(data)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "type":type(e).__name__,
+            "message":e.message if hasattr(e, 'message') else str(e)
+        }), 400
 
 @app.route('/prices')
 def prices():
