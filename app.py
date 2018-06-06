@@ -39,7 +39,7 @@ def get_route_stations():
         if "route" not in data or not data["route"]:
             raise Exception("A valid 'route' parameter is required in request body (array of [lat, lng])")
 
-        return jsonify(getRouteStations(db, data["route"]), maxdist)
+        return jsonify(getRouteStations(db, data["route"], maxdist))
 
     except Exception as e:
         traceback.print_exc()
