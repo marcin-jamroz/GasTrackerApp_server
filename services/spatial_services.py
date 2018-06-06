@@ -27,8 +27,10 @@ def getStationsFromRadius(db, point, radius):
     if (not (radius or point or db)):
         return []
 
-    query = '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations WHERE
-                          ST_Distance_Sphere(point, ST_MakePoint(:lat,:lng)) <= :radius'''
+    query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng
+                FROM gas_stations
+                WHERE ST_Distance_Sphere(point, ST_MakePoint(:lat,:lng)) <= :radius'''
+
     result = db.engine.execute(text(query), {
         "lat": point["lat"],
         "lng": point["lng"],
@@ -93,7 +95,7 @@ def getRouteStations(db, route, maxdist):
 
     query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng
                 FROM gas_stations
-                WHERE ST_DWithin(ST_GeomFromText({0}), point, :mdist);'''.format("'LINESTRING({0})'".format(route_str))
+                WHERE ST_DWithin(Geography(ST_GeomFromText({0})), Geography(point), :mdist);'''.format("'LINESTRING({0})'".format(route_str))
 
     result = db.engine.execute(text(query), {
         'mdist': mDist
