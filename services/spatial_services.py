@@ -85,18 +85,17 @@ def getRouteStations(db, route, maxdist):
     if (maxdist):
         mDist = maxdist
 
-    query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng
-                FROM gas_stations
-                WHERE ST_DWithin(ST_GeomFromText(:route), point, :mdist);'''
-
     route_str = ""
     for i in range(len(route) - 1):
         rpoint = route[i]
         route_str += "{0} {1}, ".format(rpoint[0], rpoint[1])
     route_str += "{0} {1}".format(route[len(route) - 1][0], route[len(route) - 1][1])
 
+    query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng
+                FROM gas_stations
+                WHERE ST_DWithin(ST_GeomFromText('{0}'), point, :mdist);'''.format(route_str)
+
     result = db.engine.execute(query, {
-        'route': "'LINESTRING({0})'".format(route_str),
         'mdist': mDist
     }).fetchall()
 
