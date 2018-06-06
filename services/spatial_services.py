@@ -13,7 +13,7 @@ def getClusterStations(db, latitude, longitude, fuel):
                                           {'cluster_id': cluster['cluster_id'], 'fuel': fuel}).fetchall()
 
     query_closest_station = text(
-        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations g WHERE g.cluster_id = :cluster_id ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), :cluster_point) LIMIT 1;''')
+        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations g WHERE g.cluster_id = :cluster_id ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), g.point) LIMIT 1;''')
     closest_station = db.engine.execute(query_closest_station,
                                         {'cluster_id': cluster['cluster_id'], 'lat': latitude, 'lng': longitude,
                                          'cluster_point': cluster['center']}).fetchone()
