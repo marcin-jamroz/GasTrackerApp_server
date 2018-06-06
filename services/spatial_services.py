@@ -99,4 +99,6 @@ def getRouteStations(db, route, maxdist):
         'mdist': mDist
     }).fetchall()
 
-    return result
+    if (result):
+        return [dict(r) for r in result]
+    return []
