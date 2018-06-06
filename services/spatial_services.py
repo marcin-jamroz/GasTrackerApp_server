@@ -80,23 +80,24 @@ def getClusterWithBounds(db, id, boundtype="Polygon"):
             return []
 
 
-def getRouteStations(db, route):
-    query_cluster = text('''SELECT c.cluster_id, c.center FROM clusters c ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 1;
-''')
-    cluster = db.engine.execute(query_cluster, {'lat': latitude, 'lng': longitude}).fetchone()
-    print(cluster)
+def getRouteStations(db, route, maxdist):
+    mDist = 500.0 # default maxdist value
+    if (maxdist):
+        mDist = maxdist
 
-    query_cheapest_station = text(
-        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations gs WHERE gs.cluster_id = :cluster_id AND gs.price->>:fuel= (SELECT MIN(g.price->>:fuel) FROM gas_stations g WHERE cluster_id=:cluster_id);''')
-    cheapest_stations = db.engine.execute(query_cheapest_station,
-                                          {'cluster_id': cluster['cluster_id'], 'fuel': fuel}).fetchall()
+    query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng
+                FROM gas_stations
+                WHERE ST_DWithin(ST_GeomFromText(:route), point, :mdist);'''
 
-    query_closest_station = text(
-        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations g WHERE g.cluster_id = :cluster_id ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), :cluster_point) LIMIT 1;''')
-    closest_station = db.engine.execute(query_closest_station,
-                                        {'cluster_id': cluster['cluster_id'], 'lat': latitude, 'lng': longitude,
-                                         'cluster_point': cluster['center']}).fetchone()
+    route_str = ""
+    for i in range(len(route) - 1):
+        rpoint = route[i]
+        route_str += "{0} {1}, ".format(rpoint[0], rpoint[1])
+    route_str += "{0} {1}".format(route[len(route) - 1][0], route[len(route) - 1][1])
 
-    cheapest_stations = [dict(x) for x in cheapest_stations]
-    result = {'cheapest_stations': cheapest_stations, 'closest_station': dict(closest_station)}
+    result = db.engine.execute(query, {
+        'route': "'LINESTRING({0})'".format(route_str),
+        'mdist': mDist
+    }).fetchall()
+
     return result
