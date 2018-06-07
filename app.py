@@ -34,7 +34,7 @@ def get_cluster_stations():
 @app.route('/route_stations', methods=["POST"])
 def get_route_stations():
     try:
-        maxdist = request.args.get('maxdist')
+        maxdist = float(request.args.get('maxdist'))
         data = request.get_json(force=True)
         if "route" not in data or not data["route"]:
             raise Exception("A valid 'route' parameter is required in request body (array of [lat, lng])")
