@@ -28,6 +28,8 @@ def get_cluster_stations():
         lat = request.args.get('lat')
         lng = request.args.get('lng')
         fuel = request.args.get('fuel')
+        cheapN = request.args.get('cheapN') or 1
+        closeN = request.args.get('closeN') or 3
 
         if (not lat or not lng or not fuel):
             raise Exception('Missing one or more of parameters: lat, lng, fuel')
@@ -35,7 +37,10 @@ def get_cluster_stations():
         if (fuel not in [ "LPG", "ON", "PB95" ]):
             raise Exception('fuel parameter must be one of: LPG | PB95 | ON')
 
-        result = getClusterStations(db, lat, lng, fuel)
+        if (closeN > 100 or cheapN > 100):
+            raise Exception('Too large closest or cheapest max optimum stations limit (max allowed value is 100)')
+
+        result = getClusterStations(db, lat, lng, fuel, cheapN, closeN)
         return jsonify(result)
 
     except Exception as e:

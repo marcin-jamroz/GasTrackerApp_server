@@ -10,7 +10,7 @@ from sqlalchemy.sql import text
 #         LIMIT 3;''')
 
 
-def getClusterStations(db, latitude, longitude, fuel):
+def getClusterStations(db, latitude, longitude, fuel, cheapN, closeN):
 
     # Get stations from 5 nearest clusters to user and sort them by price and then by distance
     query_cheapest_station = text(
@@ -20,9 +20,9 @@ def getClusterStations(db, latitude, longitude, fuel):
             WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
                           ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 3)
             ORDER BY gs.price->>:fuel, ST_DISTANCE(ST_POINT(:lat, :lng), gs.point)
-            LIMIT 3;''')
+            LIMIT :n;''')
 
-    cheapest_stations = db.engine.execute(query_cheapest_station, {'lat': latitude, 'lng': longitude, 'fuel': fuel}).fetchall()
+    cheapest_stations = db.engine.execute(query_cheapest_station, {'lat': latitude, 'lng': longitude, 'fuel': fuel, 'n': cheapN}).fetchall()
 
     # Get stations from 5 nearest clusters to user and sort them by distance
     query_closest_station = text(
@@ -32,9 +32,9 @@ def getClusterStations(db, latitude, longitude, fuel):
             WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
                           ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 3)
             ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), gs.point)
-            LIMIT 3;''')
+            LIMIT :n;''')
 
-    closest_stations = db.engine.execute(query_closest_station, {'lat': latitude, 'lng': longitude}).fetchall()
+    closest_stations = db.engine.execute(query_closest_station, {'lat': latitude, 'lng': longitude, 'n': closeN}).fetchall()
 
     cheapest_stations = [dict(x) for x in cheapest_stations]
     closest_stations = [dict(x) for x in closest_stations]
