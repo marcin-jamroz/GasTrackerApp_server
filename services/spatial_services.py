@@ -15,11 +15,11 @@ def getClusterStations(db, latitude, longitude, fuel):
     # Get stations from 5 nearest clusters to user and sort them by price and then by distance
     query_cheapest_station = text(
         '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated,
-                  network_id, ST_X(point) as lat, ST_Y(point) as lng, ST_DISTANCE(Geography(ST_POINT(:lat, :lng)), Geography(gs.point)) as dist
+                  network_id, ST_X(point) as lat, ST_Y(point) as lng
             FROM gas_stations gs
             WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
                           ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 3)
-            ORDER BY gs.price->>:fuel, dist
+            ORDER BY gs.price->>:fuel, ST_DISTANCE(ST_POINT(:lat, :lng), gs.point)
             LIMIT 3;''')
 
     cheapest_stations = db.engine.execute(query_cheapest_station, {'lat': latitude, 'lng': longitude, 'fuel': fuel}).fetchall()
@@ -27,11 +27,11 @@ def getClusterStations(db, latitude, longitude, fuel):
     # Get stations from 5 nearest clusters to user and sort them by distance
     query_closest_station = text(
         '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated,
-                  network_id, ST_X(point) as lat, ST_Y(point) as lng, ST_DISTANCE(Geography(ST_POINT(:lat, :lng)), Geography(gs.point)) as dist
+                  network_id, ST_X(point) as lat, ST_Y(point) as lng
             FROM gas_stations gs
             WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
                           ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 3)
-            ORDER BY dist
+            ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), gs.point)
             LIMIT 3;''')
 
     closest_stations = db.engine.execute(query_closest_station, {'lat': latitude, 'lng': longitude}).fetchall()
