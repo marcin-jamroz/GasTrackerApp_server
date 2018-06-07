@@ -28,8 +28,8 @@ def get_cluster_stations():
         lat = request.args.get('lat')
         lng = request.args.get('lng')
         fuel = request.args.get('fuel')
-        cheapN = int(request.args.get('cheapN')) or 1
-        closeN = int(request.args.get('closeN')) or 3
+        cheapN = int(request.args.get('cheapN') or 3)
+        closeN = int(request.args.get('closeN') or 1)
 
         if (not lat or not lng or not fuel):
             raise Exception('Missing one or more of parameters: lat, lng, fuel')
