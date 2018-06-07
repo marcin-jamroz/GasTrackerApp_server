@@ -32,12 +32,13 @@ def getClusterStations(db, latitude, longitude, fuel):
             WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
                           ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 3)
             ORDER BY dist
-            LIMIT 1;''')
+            LIMIT 3;''')
 
-    closest_station = db.engine.execute(query_closest_station, {'lat': latitude, 'lng': longitude}).fetchone()
+    closest_stations = db.engine.execute(query_closest_station, {'lat': latitude, 'lng': longitude}).fetchall()
 
     cheapest_stations = [dict(x) for x in cheapest_stations]
-    result = {'cheapest_stations': cheapest_stations, 'closest_station': dict(closest_station)}
+    closest_stations = [dict(x) for x in closest_stations]
+    result = {'cheapest_stations': cheapest_stations, 'closest_stations': closest_stations}
     return result
 
 
