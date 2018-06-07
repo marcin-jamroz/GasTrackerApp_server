@@ -1,22 +1,40 @@
 from sqlalchemy.sql import text
 
+# query_cheapest_station_test = text(
+#     '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated,
+#               network_id, ST_X(point) as lat, ST_Y(point) as lng, ST_DISTANCE(Geography(ST_POINT(50.5380, 22.7228)), Geography(gs.point)) as dist
+#         FROM gas_stations gs
+#         WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
+#                       ORDER BY ST_DISTANCE(ST_POINT(50.5380, 22.7228), c.center) LIMIT 5)
+#         ORDER BY gs.price->>'LPG', dist
+#         LIMIT 3;''')
+
 
 def getClusterStations(db, latitude, longitude, fuel):
-    query_cluster = text('''SELECT c.cluster_id, c.center FROM clusters c ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 1;
-''')
-    cluster = db.engine.execute(query_cluster, {'lat': latitude, 'lng': longitude}).fetchone()
-    print(cluster)
 
+    # Get stations from 5 nearest clusters to user and sort them by price and then by distance
     query_cheapest_station = text(
-        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations gs WHERE gs.cluster_id = :cluster_id AND gs.price->>:fuel= (SELECT MIN(g.price->>:fuel) FROM gas_stations g WHERE cluster_id=:cluster_id);''')
-    cheapest_stations = db.engine.execute(query_cheapest_station,
-                                          {'cluster_id': cluster['cluster_id'], 'fuel': fuel}).fetchall()
+        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated,
+                  network_id, ST_X(point) as lat, ST_Y(point) as lng, ST_DISTANCE(Geography(ST_POINT(:lat, :lng)), Geography(gs.point)) as dist
+            FROM gas_stations gs
+            WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
+                          ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 3)
+            ORDER BY gs.price->>:fuel, dist
+            LIMIT 3;''')
 
+    cheapest_stations = db.engine.execute(query_cheapest_station, {'lat': latitude, 'lng': longitude, 'fuel': fuel}).fetchall()
+
+    # Get stations from 5 nearest clusters to user and sort them by distance
     query_closest_station = text(
-        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng FROM gas_stations g WHERE g.cluster_id = :cluster_id ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), g.point) LIMIT 1;''')
-    closest_station = db.engine.execute(query_closest_station,
-                                        {'cluster_id': cluster['cluster_id'], 'lat': latitude, 'lng': longitude,
-                                         'cluster_point': cluster['center']}).fetchone()
+        '''SELECT station_id, price, cluster_id, extract(epoch from updated) as updated,
+                  network_id, ST_X(point) as lat, ST_Y(point) as lng, ST_DISTANCE(Geography(ST_POINT(:lat, :lng)), Geography(gs.point)) as dist
+            FROM gas_stations gs
+            WHERE gs.cluster_id IN ( SELECT cluster_id FROM clusters c WHERE cluster_id=c.cluster_id
+                          ORDER BY ST_DISTANCE(ST_POINT(:lat, :lng), c.center) LIMIT 3)
+            ORDER BY dist
+            LIMIT 1;''')
+
+    closest_station = db.engine.execute(query_closest_station, {'lat': latitude, 'lng': longitude}).fetchone()
 
     cheapest_stations = [dict(x) for x in cheapest_stations]
     result = {'cheapest_stations': cheapest_stations, 'closest_station': dict(closest_station)}
@@ -27,7 +45,8 @@ def getStationsFromRadius(db, point, radius):
     if (not (radius or point or db)):
         return []
 
-    query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated, network_id, ST_X(point) as lat, ST_Y(point) as lng
+    query = ''' SELECT station_id, price, cluster_id, extract(epoch from updated) as updated,
+                       network_id, ST_X(point) as lat, ST_Y(point) as lng
                 FROM gas_stations
                 WHERE ST_Distance_Sphere(point, ST_MakePoint(:lat,:lng)) <= :radius'''
 

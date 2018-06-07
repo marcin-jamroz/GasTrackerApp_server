@@ -24,12 +24,26 @@ def home():
 
 @app.route('/cluster_stations')
 def get_cluster_stations():
-    lat = request.args.get('lat')
-    lng = request.args.get('lng')
-    fuel = request.args.get('fuel')
+    try:
+        lat = request.args.get('lat')
+        lng = request.args.get('lng')
+        fuel = request.args.get('fuel')
 
-    result = getClusterStations(db, lat, lng, fuel)
-    return jsonify(result)
+        if (not lat or not lng or not fuel):
+            raise Exception('Missing one or more of parameters: lat, lng, fuel')
+
+        if (fuel not in [ "LPG", "ON", "PB95" ]):
+            raise Exception('fuel parameter must be one of: LPG | PB95 | ON')
+
+        result = getClusterStations(db, lat, lng, fuel)
+        return jsonify(result)
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({
+            "type":type(e).__name__,
+            "message":e.message if hasattr(e, 'message') else str(e)
+        }), 400
 
 @app.route('/route_stations', methods=["POST"])
 def get_route_stations():
