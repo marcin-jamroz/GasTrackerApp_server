@@ -18,6 +18,7 @@ create_table = str.format("CREATE TABLE IF NOT EXISTS {} (\
   network_id INTEGER,\
   price JSONB DEFAULT '{{}}',\
   cluster_id INTEGER DEFAULT NULL,\
+  updated TIMESTAMP DEFAULT NULL,\
   point GEOMETRY NOT NULL\
 );\n", table_name)
 

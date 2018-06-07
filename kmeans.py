@@ -3,7 +3,10 @@ import numpy as np
 from sklearn.cluster import KMeans
 import json
 
-stations = json.load(open("/home/marcin/Kod/Python/gasTrackerApp/gas_stations.json"))
+outfile = sys.argv[1]
+number = int(sys.argv[2])
+
+stations = json.load(open("./gas_stations.json"))
 
 stations_x = []
 stations_y = []
@@ -21,7 +24,7 @@ for s in stations:
 f1 = stations_x
 f2 = stations_y
 
-k = 200
+k = number
 
 X = np.array(list(zip(f1, f2)), dtype=np.float32)
 kmeans = KMeans(n_clusters=k).fit(X)
@@ -31,8 +34,6 @@ cluster_idxs = kmeans.predict(X)
 
 
 # clusters table
-
-outfile = sys.argv[1]
 
 table_name = "clusters"
 
